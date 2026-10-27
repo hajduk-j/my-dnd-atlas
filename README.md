@@ -1,32 +1,32 @@
 # My DnD Atlas
 
-Interaktívny mapový atlas k našej súkromnej D&D kampani. Je to výstup z môjho vlastného editora máp (*DnD Atlas Map Maker*) naplnený obsahom z našich sessions: mapa sveta, regióny, piny a poznámky zo sessions.
+An interactive map atlas for our private D&D campaign. It is the output of my own map editor (the *DnD Atlas Map Maker*), filled with content from our sessions: a world map, regions, pins and session notes.
 
-**Toto je súkromná vec pre moju herňu družinu.** Repozitár je verejný len preto, aby som mohol atlas zdieľať s hráčmi cez GitHub Pages. Nie je to hotový produkt ani projekt, do ktorého sa očakávajú príspevky.
+**This is a private project for my gaming group.** The repository is public only so I can share the atlas with my players via GitHub Pages. It is not a finished product, and contributions are not expected.
 
-## Pre hráčov
+## For players
 
-Atlas sa otvorí v prehliadači, nič sa neinštaluje. Mapu posúvaš ťahaním a približuješ kolieskom myši alebo gestom na dotykovom displeji. Funguje na počítači aj na mobile.
+The atlas opens in a browser and needs no installation. Drag to pan the map, and zoom with the mouse wheel or a pinch gesture on a touch screen. It works on desktop and mobile.
 
-Odkaz na živú verziu (GitHub Pages): `https://hajduk-j.github.io/my-dnd-atlas/`
+Live version (GitHub Pages): `https://hajduk-j.github.io/my-dnd-atlas/`
 
-## Ako je to postavené (príklad použitia map makera)
+## How it is built (an example of using the map maker)
 
-Celý atlas je **jeden samostatný súbor [index.html](index.html)**. Mapy, obrázky, štýly aj skripty sú vložené priamo v ňom, takže nepotrebuje žiadny build ani server.
+The whole atlas is **a single self-contained file, [index.html](index.html)**. Maps, images, styles and scripts are all embedded in it, so it needs no build step and no server.
 
-Takto vyzerá výsledok, ktorý z mojho editora vypadne. Ak ťa zaujíma, ako si podobný atlas spraviť pre vlastnú kampaň:
+This is what the map maker produces. If you want to make a similar atlas for your own campaign:
 
-1. Vytvoríš mapu a obsah (regióny, piny, poznámky zo sessions) v editore.
-2. Exportuješ ju ako jeden `index.html`.
-3. Nahráš ho do repozitára a v *Settings → Pages* zapneš publikovanie z vetvy `main`.
-4. Hráčom pošleš odkaz.
+1. Create your map and content (regions, pins, session notes) in the editor.
+2. Export it as a single `index.html`.
+3. Upload it to a repository and enable publishing from the `main` branch under *Settings → Pages*.
+4. Send your players the link.
 
-Samotný editor tu nie je. Tento repozitár obsahuje iba hotový atlas ako ukážku výstupu.
+The editor itself is not included here. This repository contains only the finished atlas as an example of the output.
 
-## Pozor
+## Heads up
 
-Atlas obsahuje veci zo sessions, takže môže obsahovať **spoilery** k našej kampani. Ak ho otváraš, nie si v mojej družine a nechceš spoilery, ber to ako ukážku vzhľadu a nie ako herný materiál.
+The atlas contains material from our sessions, so it may contain **spoilers** for our campaign. If you are not in my group and would rather avoid spoilers, treat it as a showcase of the look and feel, not as playable material.
 
-## Licencia
+## License
 
-Zatiaľ bez licencie, všetky práva vyhradené. Obsah kampane a mapy sú moje a nie sú určené na ďalšie použitie.
+No license for now, all rights reserved. The campaign content and maps are mine and are not intended for reuse.
