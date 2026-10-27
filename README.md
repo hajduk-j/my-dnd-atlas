@@ -1,6 +1,6 @@
 # My DnD Atlas
 
-An interactive map atlas for our private D&D campaign. It is the output of my own map editor (the *DnD Atlas Map Maker*), filled with content from our sessions: a world map, regions, pins and session notes.
+An interactive map atlas for our private D&D campaign. It is the output of my own map editor, the [DnD Atlas Map Maker](https://hajduk-j.github.io/dnd-atlas-map-maker/), filled with content from our sessions: a world map, regions, pins and session notes.
 
 **This is a private project for my gaming group.** The repository is public only so I can share the atlas with my players via GitHub Pages. It is not a finished product, and contributions are not expected.
 
@@ -16,12 +16,12 @@ The whole atlas is **a single self-contained file, [index.html](index.html)**. M
 
 This is what the map maker produces. If you want to make a similar atlas for your own campaign:
 
-1. Create your map and content (regions, pins, session notes) in the editor.
+1. Create your map and content (regions, pins, session notes) in the [DnD Atlas Map Maker](https://hajduk-j.github.io/dnd-atlas-map-maker/).
 2. Export it as a single `index.html`.
 3. Upload it to a repository and enable publishing from the `main` branch under *Settings → Pages*.
 4. Send your players the link.
 
-The editor itself is not included here. This repository contains only the finished atlas as an example of the output.
+The editor itself is not included here; you can use it online at the link above. This repository contains only the finished atlas as an example of the output.
 
 ## Heads up
 
