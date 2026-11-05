@@ -1486,71 +1486,94 @@ vp.dataset.bg=DATA.background;
 })();
 
 /* --- snow under the map --- */
-/* The other background: snow falling through the dark on the same canvas the motes use. It is
-   built in three layers of depth. Far flakes are many, tiny, sharp and slow; the middle ones are
-   a little larger; the few near ones are big, soft and out of focus, the way a flake close to a
-   lens is. Every flake flutters as it falls, its speed rising and dipping, and a slow wind
-   leans the whole fall one way and then eases back, with small eddies on top. */
+/* The other background is a blizzard: dots and short streaks driven hard across the dark. Every particle
+   is drawn as a line along the way it is moving, so a fast gust stretches the same particle into a longer
+   streak and a lull shrinks it back to a dot. Three layers (far, middle, near) differ in size, speed and
+   brightness, and each layer is stroked in one go, so a few hundred particles cost little. The wind swells
+   and drops in gusts, and a faint haze thickens with it, the way the air whitens in a squall. */
 (function(){
   if(DATA.background!=='snow') return;
   var c=document.getElementById('magic');
   if(!c||!c.getContext) return;
   var ctx=c.getContext('2d');
   var calm=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  var W=0,H=0,flakes=[],last=0,clock=0;
-  // one round sprite per amount of blur: a sharp point, a soft one, and a wide pale bokeh disc
-  function disc(solid){
-    var s=document.createElement('canvas'); s.width=s.height=48;
-    var g=s.getContext('2d'), gr=g.createRadialGradient(24,24,0,24,24,24);
-    gr.addColorStop(0,'rgba(255,255,255,1)');
-    gr.addColorStop(solid,'rgba(244,249,253,.92)');
-    gr.addColorStop(1,'rgba(244,249,253,0)');
-    g.fillStyle=gr; g.fillRect(0,0,48,48);
-    return s;
+  var W=0,H=0,P=[],B=[],last=0,clock=0;
+  // A bank of fog is a heap of soft discs baked once into a sprite; a frame is then one drawImage per bank.
+  function bake(){
+    var w=1100, h=400, sp=document.createElement('canvas'); sp.width=w; sp.height=h;
+    var g=sp.getContext('2d'), n=11+Math.floor(Math.random()*5);
+    for(var i=0;i<n;i++){
+      var r=70+Math.random()*80, x=r+Math.random()*(w-r*2), y=r+Math.random()*(h-r*2), gr=g.createRadialGradient(x,y,0,x,y,r);
+      gr.addColorStop(0,'rgba(214,226,240,.62)'); gr.addColorStop(.5,'rgba(214,226,240,.28)'); gr.addColorStop(1,'rgba(214,226,240,0)');
+      g.fillStyle=gr; g.fillRect(x-r,y-r,r*2,r*2);
+    }
+    return sp;
   }
-  var sharp=disc(.62), soft=disc(.3), blur=disc(.05);
-  function flake(y){
-    // most flakes are far and small; the near, large ones are rare
-    var q=Math.random(), layer=q<.62?0:(q<.92?1:2), d, r, img, a, vy;
-    if(layer===0){ d=.25+Math.random()*.2; r=.5+Math.random()*.7; img=sharp; a=.45+Math.random()*.3; vy=14+Math.random()*12; }
-    else if(layer===1){ d=.5+Math.random()*.25; r=1.1+Math.random()*1.1; img=Math.random()<.5?sharp:soft; a=.55+Math.random()*.3; vy=26+Math.random()*20; }
-    else { d=.85+Math.random()*.15; r=2.6+Math.random()*3; img=blur; a=.16+Math.random()*.2; vy=52+Math.random()*34; }
-    return {x:Math.random()*W, y:y===undefined?Math.random()*H:y, d:d, r:r, img:img, a:a, vy:vy,
-      ph:Math.random()*6.28, fr:.5+Math.random()*1.1,            // flutter, side to side
-      ph2:Math.random()*6.28, fr2:.17+Math.random()*.3,          // a slower second sway
-      sw:4+Math.random()*11*d, sw2:3+Math.random()*7,
-      tw:Math.random()*6.28, ftw:.4+Math.random()*1.2};          // a faint glint as it turns
+  function banks(){
+    var art=[bake(),bake(),bake(),bake()], n=Math.round(Math.max(4,Math.min(9,W*H/120000))); B=[];
+    for(var i=0;i<n;i++){
+      var bw=W*(.8+Math.random()*.9);
+      B.push({img:art[i%art.length], w:bw, h:bw*.364, x:Math.random()*(W+bw)-bw, y:(i+Math.random())/n*(H+80)-80,
+        v:3+Math.random()*6, bob:8+Math.random()*16, ph:Math.random()*6.28, fr:.05+Math.random()*.08,
+        a:.5+Math.random()*.5, bp:Math.random()*6.28, br:.05+Math.random()*.06});
+    }
+  }
+  // width, opacity and streak length of each layer, and the share of the particles it holds
+  var L=[{w:1.2,a:.42,k:.016,share:.56,vy:[24,46],drift:.5},
+         {w:1.8,a:.62,k:.03,share:.32,vy:[46,80],drift:.8},
+         {w:2.6,a:.8,k:.046,share:.12,vy:[76,120],drift:1}];
+  var PAD=90;
+  function make(){
+    var q=Math.random(), li=q<L[0].share?0:(q<L[0].share+L[1].share?1:2), l=L[li];
+    return {li:li, x:Math.random()*(W+PAD*2)-PAD, y:Math.random()*(H+PAD*2)-PAD,
+      vy:l.vy[0]+Math.random()*(l.vy[1]-l.vy[0]), f:l.drift*(.8+Math.random()*.4),
+      ph:Math.random()*6.28, fr:.3+Math.random()*.7, sw:5+Math.random()*16};
   }
   function size(){
     var dpr=Math.min(window.devicePixelRatio||1,2);
     W=vp.clientWidth; H=vp.clientHeight;
     c.width=Math.round(W*dpr); c.height=Math.round(H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    var n=Math.round(Math.max(90,Math.min(300,W*H/5200)));
-    while(flakes.length<n) flakes.push(flake());
-    flakes.length=n;
+    var n=Math.round(Math.max(260,Math.min(900,W*H/1300)));
+    while(P.length<n) P.push(make());
+    P.length=n;
+    banks();
   }
-  // wind in px/s: a steady lean plus two slow gusts that do not line up with each other
-  function wind(t){ return 14+26*Math.sin(t*.19)+12*Math.sin(t*.53+1.3); }
+  // wind in px/s: a steady push, two slow swells, and now and then a hard gust
+  function gust(t){ return Math.pow(Math.max(0,Math.sin(t*.08+.5)),4); }
+  function wind(t){ return 100+42*Math.sin(t*.17)+26*Math.sin(t*.43+1.3)+92*gust(t); }
   function draw(dt){
-    var w=wind(clock), lift=Math.sin(clock*.31)*5;     // a gust also lifts the snow a little
+    var w=wind(clock), g=gust(clock);
     ctx.clearRect(0,0,W,H);
-    for(var i=0;i<flakes.length;i++){
-      var f=flakes[i];
-      f.ph+=f.fr*dt; f.ph2+=f.fr2*dt; f.tw+=f.ftw*dt;
-      // a tumbling flake does not fall at one speed: it hangs, then drops
-      var fall=f.vy*(1+.28*Math.sin(f.ph*.9+f.ph2))-lift*f.d;
-      f.y+=fall*dt;
-      f.x+=(w*(.25+f.d*.9)+Math.cos(f.ph)*f.sw+Math.sin(f.ph2)*f.sw2)*dt;
-      if(f.y-f.r*2>H){ f.y=-f.r*3; f.x=Math.random()*W; }
-      if(f.x>W+14) f.x-=W+28; else if(f.x<-14) f.x+=W+28;
-      // it fades in at the top and out at the bottom, so the wrap is never seen
-      var edge=Math.min(1,(f.y+24)/70,(H+24-f.y)/70);
-      ctx.globalAlpha=Math.max(0,f.a*edge*(.82+.18*Math.sin(f.tw)));
-      var r=f.r*2;
-      ctx.drawImage(f.img,f.x-r,f.y-r,r*2,r*2);
+    // the haze: the whole air whitens a little as a gust arrives
+    ctx.fillStyle='rgba(206,219,233,'+(.03+.09*g)+')';
+    ctx.fillRect(0,0,W,H);
+    // the banks of fog drift with the wind, thicken and thin by themselves, and thicken in a gust
+    for(var b=0;b<B.length;b++){
+      var k=B[b];
+      k.x+=(k.v+w*.05)*dt; k.ph+=k.fr*dt; k.bp+=k.br*dt;
+      if(k.x>W) k.x=-k.w;
+      ctx.globalAlpha=Math.min(1,k.a*(.55+.45*Math.sin(k.bp))*(.7+.7*g));
+      ctx.drawImage(k.img,k.x,k.y+Math.sin(k.ph)*k.bob,k.w,k.h);
     }
     ctx.globalAlpha=1;
+    ctx.lineCap='round';
+    for(var li=0; li<3; li++){
+      var l=L[li];
+      ctx.lineWidth=l.w; ctx.strokeStyle='rgba(238,245,252,'+l.a+')';
+      ctx.beginPath();
+      for(var i=0;i<P.length;i++){
+        var p=P[i]; if(p.li!==li) continue;
+        p.ph+=p.fr*dt;
+        var vx=w*p.f+Math.sin(p.ph)*p.sw, vy=p.vy+g*20*p.f+Math.cos(p.ph*1.3)*p.sw*.5;
+        p.x+=vx*dt; p.y+=vy*dt;
+        // the torus: what leaves one side comes back on the other, beyond the edge where it cannot be seen
+        if(p.x>W+PAD) p.x-=W+PAD*2; else if(p.x<-PAD) p.x+=W+PAD*2;
+        if(p.y>H+PAD) p.y-=H+PAD*2;
+        ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-vx*l.k,p.y-vy*l.k);
+      }
+      ctx.stroke();
+    }
   }
   function frame(t){
     var dt=last?Math.min(.05,(t-last)/1000):0; last=t; clock+=dt;
