@@ -214,19 +214,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* the switch between the session recap and the place: two engraved plates, the chosen one inked in */
 .sh-top{margin:24px 28px 0}
 .sh-top[hidden]{display:none}
-.sh-mode{display:flex;margin:0;border:1px solid var(--sepia-rule);border-radius:2px;
-  background:rgba(255,246,214,.28);box-shadow:inset 0 1px 3px rgba(60,34,10,.18)}
-.sh-mode[hidden]{display:none}
-.sh-mode button{flex:1;background:none;border:none;border-radius:1px;padding:7px 10px;
-  font-family:var(--display);font-weight:600;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
-  color:#6b5330;transition:background .18s,color .18s}
-.sh-mode button + button{border-left:1px solid var(--sepia-rule)}
-.sh-mode button:hover{color:var(--sepia-ink);background:rgba(255,246,214,.35)}
-.sh-mode button[aria-selected="true"]{background:var(--sepia-ink);color:var(--vellum);
-  box-shadow:inset 0 0 0 1px rgba(255,246,214,.18)}
+/* The panel has two views. With nothing chosen it is the overview: the session switch and the recap of the
+   session being read. Once a place is chosen it is only about that place, with a way back to the overview. */
+.sheet .sh-sess,.sheet .sh-back{display:none}
+.sheet.view-default .sh-sess:not([hidden]){display:flex}
+.sheet.view-place .sh-back{display:inline-flex}
+.sh-back{align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;margin:0 0 4px;font-family:var(--display);font-weight:600;
+  font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--sepia-ink);background:rgba(255,246,214,.3);
+  border:1px solid var(--sepia-rule);border-radius:2px}
+.sh-back:hover{background:rgba(255,246,214,.6)}
 .sh-top:not([hidden]) + .sh-head{padding-top:18px}
-.sheet.mode-recap .sh-tabs button{display:none}
-.sheet.mode-recap .sh-tabs{height:0;margin:16px 0 0}
+/* the overview has no tabs: they belong to a place */
+.sheet.view-default .sh-tabs{display:none}
 .sh-kicker{text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--rubric)}
 .sh-kicker i{border:1px solid rgba(40,20,5,.5)}
 .sh-title{font-size:26px;letter-spacing:.05em;text-transform:uppercase;line-height:1.15;color:var(--sepia-ink)}
@@ -395,7 +394,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 @media (max-width:760px){
   :root{--panel-w:0px}
-  body.has-recap .recap-btn{display:inline-block}
+  body.has-sessions .recap-btn{display:inline-block}
   /* the panel is a page of its own: it slides up over the whole screen and has a plain way back */
   .sh-close{display:flex;position:relative;top:auto;right:auto;align-items:center;gap:7px;width:auto;height:38px;align-self:flex-start;
     margin:calc(12px + env(safe-area-inset-top, 0px)) 0 0 14px;padding:0 14px 0 9px;font-size:0}
@@ -403,10 +402,11 @@ button{font:inherit;color:inherit;cursor:pointer}
   .sh-close::after{content:"Map";font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
   /* the way back and the session switch share one row, so little of the screen is taken from the page */
   .sh-top{position:static;margin:8px 18px 0}
+  /* on a phone the Map button is the way back from a place, so the top row is only for the overview */
+  .sheet.view-place .sh-top{display:none}
   .sh-sess{position:absolute;top:calc(12px + env(safe-area-inset-top, 0px));left:112px;right:14px;height:38px;margin:0;gap:3px}
   .sh-sess button{width:32px;height:32px}
   .sh-sess .sess-name{font-size:13px}
-  .sh-mode button{padding:6px 8px}
   .car .car-nav{top:-14px}
   /* dvh, because on a phone the browser bar slides away and vh does not follow */
   .sheet{top:0;left:0;width:100%;height:100vh;height:100dvh;transition:transform .32s cubic-bezier(.22,.7,.3,1);
@@ -481,14 +481,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 <aside class="sheet" id="sheet" aria-label="Details">
   <button class="sh-close" id="shClose" aria-label="Close">&#215;</button>
   <div class="sh-top" id="shTop" hidden>
+    <button class="sh-back" id="shBack" type="button">&#8249; Overview</button>
     <div class="sh-sess" id="shSess" hidden>
       <button id="sessPrev" aria-label="Earlier session">&#8249;</button>
       <span class="sh-sess-body"><span class="sess-name" id="sessName"></span><span class="sess-count" id="sessCount"></span></span>
       <button id="sessNext" aria-label="Later session">&#8250;</button>
-    </div>
-    <div class="sh-mode" id="shMode" role="tablist" aria-label="Panel" hidden>
-      <button id="modeRecap" role="tab" aria-selected="false">Session recap</button>
-      <button id="modePlace" role="tab" aria-selected="true">Place</button>
     </div>
   </div>
   <div class="sh-head">
@@ -725,12 +722,11 @@ function endPan(e){
   if(pan&&e.pointerId===pan.id){ pan=null; vp.classList.remove('drag'); }
 }
 vp.addEventListener('pointerup',endPan); vp.addEventListener('pointercancel',endPan);
-// On a phone a click on the bare map puts the panel away. Not the end of a drag or a pinch, though, and
-// not a click on a pin — that one opens a place of its own.
+// A click on the bare map leaves the place that is open: back to the overview on a wide screen, the panel put
+// away on a phone. Not the end of a drag or a pinch, though, and not a click on a pin, which opens a place.
 vp.addEventListener('click',function(e){
   if(e.target.closest('.pin') || (tap && tap.moved)) return;
-  // on a wide screen the panel stays where it is; only the bottom sheet is put away
-  if(MOBILE.matches && sheet.classList.contains('open')) closeSheet();
+  if(cur) closeSheet();
 });
 document.getElementById('zi').onclick=function(){var r=vp.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.3)};
 document.getElementById('zo').onclick=function(){var r=vp.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1/1.3)};
@@ -970,9 +966,9 @@ function markCurrent(id){
 var sheet=document.getElementById('sheet'), scroller=document.getElementById('shBody'), body=document.getElementById('shContent');
 var tabA=document.getElementById('tabArea'), tabC=document.getElementById('tabChars');
 var cur=null, curTab='area', ci=0;
-/* The panel shows either the recap of the session being read or a place. The switch at its top
-   exists only when some session has a recap written. */
-var mode='place';
+/* The panel has two views. The overview (nothing chosen) shows the session switch and the recap of the
+   session being read, or the introduction of the atlas when no session has a recap. A place shows only
+   itself. The session in force still decides what a place shows, but it is changed in the overview. */
 var HAS_RECAP=DATA.sessions.some(function(s){ return recapText(s); });
 function recapText(s){ return s && s.recap && String(s.recap).trim(); }
 /* A place's text, pictures and each character can be held back until a session. They are shown
@@ -983,7 +979,6 @@ function shownFrom(id){
   return true;
 }
 function visChars(p){ return (p.characters||[]).filter(function(c){ return shownFrom(c.from); }); }
-var modeBox=document.getElementById('shMode'), modeRecap=document.getElementById('modeRecap'), modePlace=document.getElementById('modePlace');
 // Below this width the panel is a bottom sheet that slides in; above it, a fixed column.
 var MOBILE=window.matchMedia('(max-width:760px)');
 
@@ -1004,18 +999,12 @@ function openPlace(p){
   revealSheet();
   renderPlace();
 }
-function setMode(m){
-  mode=m;
-  sheet.classList.toggle('mode-recap', m==='recap');
-  modeRecap.setAttribute('aria-selected', m==='recap'?'true':'false');
-  modePlace.setAttribute('aria-selected', m==='place'?'true':'false');
-}
 function renderPlace(){
   var p=cur;
   // a party is worked out again each time, so it follows the session being read
   if(p && p.isParty){ p=partyPlace(p.party); cur=p; }
-  if(!p){ showIntro(); return; }
-  setMode('place');
+  if(!p){ showDefault(); return; }
+  setView('place');
   var f=fac(p);
   document.getElementById('shKicker').innerHTML='';
   var k=document.getElementById('shKicker');
@@ -1037,38 +1026,38 @@ function renderPlace(){
   markCurrent(p.id);
   paint();
 }
-/* The recap of the session being read: its name, and what the table wrote down about it. */
-function showRecap(){
-  setMode('recap');
-  var s=DATA.sessions[SESSION];
-  document.getElementById('shKicker').textContent='Recap'+(DATA.sessions.length>1 ? ' \u00b7 '+(SESSION+1)+' of '+DATA.sessions.length : '');
-  document.getElementById('shTitle').textContent=s.label;
-  var sum=document.getElementById('shSum'); sum.textContent=''; sum.style.display='none';
-  tabA.parentNode.style.display='';
-  body.innerHTML=''; scroller.scrollTop=0;
-  if(recapText(s)) body.appendChild(prose(s.recap));
-  else { var n=document.createElement('p'); n.className='none'; n.textContent='Nothing has been written about this session yet.'; body.appendChild(n); }
+/* Which of the two views the panel is in, and which of its top controls go with it. */
+function setView(v){
+  sheet.classList.toggle('view-default', v==='default');
+  sheet.classList.toggle('view-place', v==='place');
+  // the top row is empty in the overview of an atlas with a single session, and then it is left out
+  document.getElementById('shTop').hidden = (v==='default' && DATA.sessions.length<2);
 }
-function refreshRecap(){ if(HAS_RECAP && mode==='recap') showRecap(); }
-modeRecap.onclick=function(){ showRecap(); };
-modePlace.onclick=function(){ renderPlace(); };
-document.getElementById('recapBtn').onclick=function(){
-  showRecap(); revealSheet();
-};
-/* The fixed panel is never blank: with nothing chosen it introduces the atlas and says what to do. */
-function showIntro(){
-  cur=null; markCurrent(''); setMode('place');
-  document.getElementById('shKicker').textContent='Atlas';
-  document.getElementById('shTitle').textContent=DATA.title||'';
-  var sum=document.getElementById('shSum');
-  sum.textContent=DATA.subtitle||''; sum.style.display=DATA.subtitle?'':'none';
+/* The overview: the recap of the session being read, or the introduction of the atlas when none has a recap. */
+function showDefault(){
+  cur=null; markCurrent(''); setView('default');
   tabA.parentNode.style.display='none';
   body.innerHTML=''; scroller.scrollTop=0;
-  if(DATA.intro) body.appendChild(prose(DATA.intro));
+  var kicker=document.getElementById('shKicker'), sum=document.getElementById('shSum');
+  if(HAS_RECAP && DATA.sessions.length){
+    var s=DATA.sessions[SESSION];
+    kicker.textContent='Recap'+(DATA.sessions.length>1 ? ' \u00b7 '+(SESSION+1)+' of '+DATA.sessions.length : '');
+    document.getElementById('shTitle').textContent=s.label;
+    sum.textContent=''; sum.style.display='none';
+    if(recapText(s)) body.appendChild(prose(s.recap));
+    else { var n=document.createElement('p'); n.className='none'; n.textContent='Nothing has been written about this session yet.'; body.appendChild(n); }
+  } else {
+    kicker.textContent='Atlas';
+    document.getElementById('shTitle').textContent=DATA.title||'';
+    sum.textContent=DATA.subtitle||''; sum.style.display=DATA.subtitle?'':'none';
+    if(DATA.intro) body.appendChild(prose(DATA.intro));
+  }
   var h=document.createElement('p'); h.className='hint';
   h.textContent=DATA.pois.length ? 'Select a place on the map to read about it here.' : 'This atlas has no places yet.';
   body.appendChild(h);
 }
+document.getElementById('recapBtn').onclick=function(){ showDefault(); revealSheet(); };
+document.getElementById('shBack').onclick=function(){ showDefault(); };
 /* On a phone the open panel is a step in the browser history, so the Back button closes it instead of
    leaving the map. Where the history cannot be written (some browsers refuse it for a local file) the
    panel simply opens and closes without it. */
@@ -1093,7 +1082,7 @@ function closeSheet(){
       setTimeout(function(){ ignorePop=false; },400);
     }
   }
-  else if(mode==='place') showIntro();      // the recap stays; Esc has nothing to put away there
+  else if(cur) showDefault();               // from a place back to the overview; the overview has nothing to put away
 }
 function syncSheet(){
   // crossing the breakpoint changes what "closed" means
@@ -1371,12 +1360,12 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowLeft'){ ci--; c.carUpd(); }
 });
 
-modeBox.hidden=!HAS_RECAP;
 document.getElementById('shSess').hidden=DATA.sessions.length<2;
-document.getElementById('shTop').hidden=!(HAS_RECAP||DATA.sessions.length>1);
-if(HAS_RECAP) document.body.classList.add('has-recap');
+if(HAS_RECAP || DATA.sessions.length>1) document.body.classList.add('has-sessions');
+// on a phone the header button opens the overview; "Sessions" when there is a switch but no recap to read
+document.getElementById('recapBtn').textContent = HAS_RECAP ? 'Session recap' : 'Sessions';
 syncSheet();
-if(!MOBILE.matches){ if(HAS_RECAP) showRecap(); else showIntro(); }
+if(!MOBILE.matches) showDefault();
 
 /* --- legend + about the atlas --- */
 (function(){
@@ -1767,8 +1756,7 @@ function drawSessions(){
     document.getElementById('sessPrev').disabled=SESSION===0;
     document.getElementById('sessNext').disabled=SESSION===DATA.sessions.length-1;
     updateParties();
-    refreshRecap();
-    if(mode==='place' && cur) renderPlace();
+    if(cur) renderPlace(); else showDefault();
   }
   function go(i){
     SESSION=Math.max(0,Math.min(DATA.sessions.length-1,i));
