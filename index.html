@@ -407,7 +407,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   .sh-sess button{width:32px;height:32px}
   .sh-sess .sess-name{font-size:13px}
   .sh-mode button{padding:6px 8px}
-  .car .car-nav{top:-14px;margin:-14px -6px 14px -8px;padding:14px 6px 10px 8px}
+  .car .car-nav{top:-14px}
   /* dvh, because on a phone the browser bar slides away and vh does not follow */
   .sheet{top:0;left:0;width:100%;height:100vh;height:100dvh;transition:transform .32s cubic-bezier(.22,.7,.3,1);
     border-left:none;border-top:none;border-radius:0;transform:translateY(100%);box-shadow:none}
@@ -415,7 +415,21 @@ button{font:inherit;color:inherit;cursor:pointer}
   .sheet.open{transform:none}
   .sh-head{padding:12px 18px 0}
   .sh-title{font-size:24px}
-  .sh-body{margin-top:12px;margin-bottom:calc(15px + env(safe-area-inset-bottom, 0px));padding:14px 6px 20px 18px}
+  .sh-body{margin:12px 0 calc(15px + env(safe-area-inset-bottom, 0px)) 0;padding:14px 16px 24px}
+  /* a profile on a phone reads from the top down: the name and the title, then the picture or the video
+     across the whole width (you scroll past it), then the whole story below */
+  .slide{display:flex;flex-direction:column}
+  .slide h4{order:1;font-size:26px;margin:0}
+  .slide .role{order:2;font-size:15px;margin:2px 0 14px}
+  .slide img,.slide video,.slide .ph{order:3;float:none;width:100%;max-width:none;aspect-ratio:3/4;margin:0 0 16px}
+  .slide .prose{order:4}
+  .slide .prose p{max-width:none}
+  .car .car-nav{margin:-14px -4px 12px;padding:14px 4px 10px}
+  /* a place: its picture across the width too, with no ceiling on its height */
+  .sh-body .area{max-height:none;width:100%}
+  .gal-win{max-height:none}
+  /* on the characters tab the place's own one-line summary steps aside, so the person comes first */
+  .sheet.view-chars .sh-sum{display:none}
   .legend{display:none}
   .ttl{font-size:17px}
   .hdr{padding:9px 14px;gap:10px}
@@ -1094,6 +1108,7 @@ tabC.onclick=function(){ if(cur&&visChars(cur).length){ curTab='chars'; paint();
 function paint(){
   tabA.setAttribute('aria-selected', curTab==='area'?'true':'false');
   tabC.setAttribute('aria-selected', curTab==='chars'?'true':'false');
+  sheet.classList.toggle('view-chars', curTab==='chars');
   body.innerHTML=''; scroller.scrollTop=0;
   if(!cur) return;
   if(curTab==='area'){
